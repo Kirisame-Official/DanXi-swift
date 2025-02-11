@@ -5,10 +5,6 @@ import WidgetKit
 
 @available(iOS 17.0, *)
 struct BusWidgetProvier: AppIntentTimelineProvider {
-    typealias Entry = BusEntry
-    
-    typealias Intent = BusScheduleIntent
-    
     func placeholder(in context: Context) -> BusEntry {
         BusEntry()
     }
@@ -89,15 +85,15 @@ extension Route {
     }
 }
 
-public struct BusEntry: TimelineEntry {
-    public let date: Date
-    public let schedules: [Schedule]
-    public let start, end: String
-    public let errorMessage: String?
-    public var placeholder = false
-    public var loadFailed = false
+struct BusEntry: TimelineEntry {
+    let date: Date
+    let schedules: [Schedule]
+    let start, end: String
+    let errorMessage: String?
+    var placeholder = false
+    var loadFailed = false
     
-    public init() {
+    init() {
         let date1 = Calendar.current.date(byAdding: .hour, value: 5, to: Date.now)!
         let date2 = Calendar.current.date(byAdding: .hour, value: 15, to: Date.now)!
         self.date = Date()
@@ -110,7 +106,7 @@ public struct BusEntry: TimelineEntry {
         self.errorMessage = nil
     }
     
-    public init(_ schedules: [Schedule], _ renderTime: Date, _ start: String, _ end: String, _ errorMessage: String? = nil) {
+    init(_ schedules: [Schedule], _ renderTime: Date, _ start: String, _ end: String, _ errorMessage: String? = nil) {
         self.date = renderTime
         self.schedules = schedules
         self.start = start
@@ -120,22 +116,12 @@ public struct BusEntry: TimelineEntry {
 }
 
 @available(iOS 17.0, *)
-public struct BusWidget: Widget {
-    public init() {}
-    
-    public var body: some WidgetConfiguration {
+struct BusWidget: Widget {
+    var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: "bus.fudan.edu.cn", intent: BusScheduleIntent.self, provider: BusWidgetProvier()) { entry in
-            Group {
-                if #available(iOS 17.0, *) {
-                    BusWidgetView(entry: entry)
-                        .containerBackground(.fill.quinary, for: .widget)
-                } else {
-                    BusWidgetView(entry: entry)
-                        .padding()
-                        .background()
-                }
-            }
-            .widgetURL(URL(string: "fduhole://navigation/campus?section=schoolbus")!)
+            BusWidgetView(entry: entry)
+                .containerBackground(.fill.quinary, for: .widget)
+                .widgetURL(URL(string: "fduhole://navigation/campus?section=schoolbus")!)
         }
         .configurationDisplayName("Bus")
         .description("Subscribe bus schedule.")
@@ -146,6 +132,19 @@ public struct BusWidget: Widget {
 @available(iOS 17.0, *)
 struct BusWidgetView: View {
     let entry: BusEntry
+    
+    var body: some View {
+        if self.entry.loadFailed {
+            Text("Load Failed")
+                .foregroundColor(.secondary)
+        } else {
+            VStack(alignment: .leading) {
+                header
+                Spacer()
+                followingBus
+            }
+        }
+    }
     
     private var header: some View {
         HStack(alignment: .top) {
@@ -221,32 +220,6 @@ struct BusWidgetView: View {
             }
         }
     }
-    
-    var body: some View {
-        if #available(iOS 17, *) {
-            widgetContent
-                .containerBackground(.fill, for: .widget)
-        } else {
-            self.widgetContent
-                .padding()
-        }
-    }
-    
-    @ViewBuilder
-    private var widgetContent: some View {
-        if self.entry.loadFailed {
-            Text("Load Failed")
-                .foregroundColor(.secondary)
-        } else {
-            VStack(alignment: .leading) {
-                self.header
-                
-                Spacer()
-        
-                self.followingBus
-            }
-        }
-    }
 }
 
 @available(iOS 17, *)
@@ -259,5 +232,12 @@ struct BusWidgetView: View {
     let myroute2 = [Schedule(id: 1, time: date2, start: "邯郸", end: "枫林", holiday: false, bidirectional: false)]
     let myroute3: [Schedule] = []
     return [BusEntry(myroute1, Date.now, "邯郸", "枫林"), BusEntry(myroute2, date1, "邯郸", "枫林"), BusEntry(myroute3, date2, "邯郸", "枫林"),
-            BusEntry(myroute2, date1, "邯郸", "枫林", "No available schedule.widget.bus")]
+            BusEntry(myroute2, date1, "邯郸", "枫林", "No available schedule")]
+}
+
+@available(iOS 17, *)
+#Preview("Bus", as: .systemSmall) {
+    BusWidget()
+} timeline: {
+    BusEntry()
 }

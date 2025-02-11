@@ -1,4 +1,3 @@
-import FudanUI
 import SwiftUI
 import WidgetKit
 
@@ -6,32 +5,11 @@ import WidgetKit
 struct DanXiWidgetBundle: WidgetBundle {
     var body: some Widget {
         WalletWidget()
-        if #available(iOS 17.0, *) {
-            BusWidget()
+        if #available(iOS 16.1, *) {
             ElectricityWidget()
         }
+        if #available(iOS 17.0, *) {
+            BusWidget()
+        }
     }
-}
-
-@available(iOS 17, *)
-#Preview("Wallet", as: .systemSmall) {
-    WalletWidget()
-} timeline: {
-    WalletEntry()
-}
-
-@available(iOS 17, *)
-#Preview("Bus", as: .systemSmall) {
-    BusWidget()
-} timeline: {
-    BusEntry()
-}
-
-@available(iOS 17, *)
-#Preview("Electricity", as: .systemSmall) {
-    ElectricityWidget()
-} timeline: {
-    ElectricityEntry(ElectricityEntry.WarnLevel.full)
-    ElectricityEntry(ElectricityEntry.WarnLevel.low)
-    ElectricityEntry(ElectricityEntry.WarnLevel.critical)
 }
